@@ -1,0 +1,19 @@
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ML artifacts and raw data are never committed (size + contributor privacy)
+ml/datasets/*
+!ml/datasets/README.md
+ml/checkpoints/*
+!ml/checkpoints/README.md
+
+.DS_Store
