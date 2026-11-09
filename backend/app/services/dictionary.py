@@ -99,7 +99,7 @@ def _letter_condition(letter: str) -> ColumnElement[bool]:
     return condition
 
 
-def _video_url(settings: Settings, storage_key: str) -> str | None:
+def video_url(settings: Settings, storage_key: str) -> str | None:
     if settings.media_public_base_url is None:
         return None
     base = str(settings.media_public_base_url).rstrip("/")
@@ -189,7 +189,7 @@ async def get_sign(
         videos=[
             SignVideoOut(
                 id=v.id,
-                url=_video_url(settings, v.storage_key),
+                url=video_url(settings, v.storage_key),
                 duration_ms=v.duration_ms,
                 video_format=v.video_format,
                 width=v.width,

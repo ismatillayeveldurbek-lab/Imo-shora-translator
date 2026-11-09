@@ -105,3 +105,43 @@ export const categoryWithCountSchema = categoryRefSchema.extend({
   sign_count: z.number().int().nonnegative(),
 });
 export type CategoryWithCount = z.infer<typeof categoryWithCountSchema>;
+
+// ---- Translation ----
+
+export const MAX_TRANSLATION_TEXT_LENGTH = 500;
+
+export const translatedSignSchema = z.object({
+  id: z.uuid(),
+  gloss: z.string(),
+  uzbek_label: z.string(),
+  is_test_data: z.boolean(),
+  video: z
+    .object({
+      url: z.string().nullable(),
+      duration_ms: z.number(),
+      video_format: z.string(),
+    })
+    .nullable(),
+});
+export type TranslatedSign = z.infer<typeof translatedSignSchema>;
+
+export const segmentSchema = z.object({
+  type: z.enum(["sign", "unmatched"]),
+  text: z.string(),
+  normalized: z.string(),
+  start: z.number().int(),
+  end: z.number().int(),
+  sign: translatedSignSchema.nullable().optional(),
+});
+export type Segment = z.infer<typeof segmentSchema>;
+
+export const textToSignResponseSchema = z.object({
+  method: z.literal("dictionary_lookup"),
+  input_text: z.string(),
+  language_variant: z.object({ code: z.string(), name: z.string() }).nullable(),
+  segments: z.array(segmentSchema),
+  matched_count: z.number().int().nonnegative(),
+  unmatched_count: z.number().int().nonnegative(),
+  unmatched_words: z.array(z.string()),
+});
+export type TextToSignResponse = z.infer<typeof textToSignResponseSchema>;
