@@ -33,7 +33,7 @@ export const routes = {
     label: "Nutqdan imo-ishoraga",
     available: false,
   },
-  dictionary: { href: "/dictionary", label: "Lug‘at", available: false },
+  dictionary: { href: "/dictionary", label: "Lug‘at", available: true },
   howItWorks: {
     href: "/how-it-works",
     label: "Qanday ishlaydi",

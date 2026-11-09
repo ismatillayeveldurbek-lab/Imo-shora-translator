@@ -43,3 +43,12 @@ def test_requires_async_postgres_driver() -> None:
 
 def test_blank_asr_provider_means_not_configured() -> None:
     assert Settings(asr_provider="  ").asr_provider is None
+
+
+def test_production_rejects_dictionary_test_data() -> None:
+    with pytest.raises(ValidationError, match="DICTIONARY_INCLUDE_TEST_DATA"):
+        Settings(
+            environment=Environment.PRODUCTION,
+            secret_key=STRONG_SECRET,
+            dictionary_include_test_data=True,
+        )

@@ -70,12 +70,33 @@ Frontend:
 cd frontend && npm run lint && npm run typecheck && npm test && npm run build
 ```
 
-## API (1-bosqich)
+## API
 
 | Metod | Yo'l | Tavsif |
 |---|---|---|
 | GET | `/api/health` | Servis va DB holati. DB ishlamasa `503` va `"status": "degraded"` |
 | GET | `/api/models/status` | Sun'iy intellekt imkoniyatlarining haqiqiy holati |
+| GET | `/api/signs` | Lug'at: `q`, `category`, `letter` (o'zbek alifbosi, `o'`, `g'`, `sh`, `ch`, `ng` bilan), `variant`, `page`, `page_size` (≤100) |
+| GET | `/api/signs/{id}` | Imo-ishora tafsilotlari va tasdiqlangan videolar. Ommaviy bo'lmasa — `404` |
+| GET | `/api/categories` | Ommaviy imo-ishoralari bor toifalar va ularning soni |
+
+**Lug'atda ko'rinish qoidasi:** yozuv `verified` holatida bo'lishi, test ma'lumoti bo'lmasligi va
+kamida bitta tasdiqlangan (`validated`) videoga ega bo'lishi shart. Qidiruvda apostrof variantlari
+(`'` `‘` `’` `ʻ` `ʼ`) bir xil hisoblanadi.
+
+```bash
+curl -s "http://localhost:8000/api/signs?q=o%E2%80%98zbek&page_size=10"
+```
+
+```json
+{"items": [], "total": 0, "page": 1, "page_size": 10, "total_pages": 0}
+```
+
+Dasturlashda test yozuvlarini ko'rish uchun (productionda taqiqlangan):
+
+```bash
+cd backend && DICTIONARY_INCLUDE_TEST_DATA=true uv run uvicorn app.main:app --reload
+```
 
 Misol:
 

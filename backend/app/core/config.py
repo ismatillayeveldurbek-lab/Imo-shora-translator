@@ -12,7 +12,14 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Annotated
 
-from pydantic import Field, PostgresDsn, SecretStr, field_validator, model_validator
+from pydantic import (
+    AnyHttpUrl,
+    Field,
+    PostgresDsn,
+    SecretStr,
+    field_validator,
+    model_validator,
+)
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 _INSECURE_SECRET_MARKERS = ("change-me", "changeme", "dev-only")
@@ -62,6 +69,14 @@ class Settings(BaseSettings):
     # Directory that holds versioned, trained model artifacts.
     model_artifacts_dir: Path = Path("../ml/checkpoints")
 
+    # Base URL that sign video storage keys are appended to (e.g. a CDN or an
+    # S3 bucket website endpoint). Unset = videos are not playable yet.
+    media_public_base_url: AnyHttpUrl | None = None
+
+    # DEVELOPMENT ONLY: also list rows flagged is_test_data in the public
+    # dictionary (marked as test data in responses). Forbidden in production.
+    dictionary_include_test_data: bool = False
+
     # Speech recognition is disabled until a validated Uzbek ASR backend is configured.
     asr_provider: str | None = None
 
@@ -79,7 +94,7 @@ class Settings(BaseSettings):
             raise ValueError("DATABASE_URL must use the 'postgresql+asyncpg' scheme")
         return value
 
-    @field_validator("asr_provider", mode="before")
+    @field_validator("asr_provider", "media_public_base_url", mode="before")
     @classmethod
     def _empty_to_none(cls, value: object) -> object:
         if isinstance(value, str) and not value.strip():
@@ -96,6 +111,8 @@ class Settings(BaseSettings):
                 )
             if "*" in self.cors_origins:
                 raise ValueError("Wildcard CORS origin is not allowed in production")
+            if self.dictionary_include_test_data:
+                raise ValueError("DICTIONARY_INCLUDE_TEST_DATA must be disabled in production")
             if self.database_echo:
                 raise ValueError("DATABASE_ECHO must be disabled in production")
         return self

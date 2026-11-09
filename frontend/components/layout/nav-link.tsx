@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ComponentProps } from "react";
+import { Suspense, type ComponentProps } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -12,11 +12,9 @@ export function isActivePath(pathname: string, href: string): boolean {
     : pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function NavLink({
-  href,
-  className,
-  ...props
-}: ComponentProps<typeof Link> & { href: string }) {
+type NavLinkProps = ComponentProps<typeof Link> & { href: string };
+
+function ActiveNavLink({ href, className, ...props }: NavLinkProps) {
   const pathname = usePathname();
   const active = isActivePath(pathname, href);
   return (
@@ -29,5 +27,27 @@ export function NavLink({
       )}
       {...props}
     />
+  );
+}
+
+/**
+ * Navigation link with an active state. The pathname is runtime data on
+ * dynamic routes (e.g. /dictionary/[id]), so under Cache Components the
+ * active-state lookup is wrapped in Suspense: the static shell renders the
+ * plain link and the active state streams in without blocking prerendering.
+ */
+export function NavLink({ href, className, ...props }: NavLinkProps) {
+  return (
+    <Suspense
+      fallback={
+        <Link
+          href={href}
+          className={cn("text-muted-foreground", className)}
+          {...props}
+        />
+      }
+    >
+      <ActiveNavLink href={href} className={className} {...props} />
+    </Suspense>
   );
 }
