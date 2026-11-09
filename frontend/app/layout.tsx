@@ -8,7 +8,7 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SkipLink } from "@/components/layout/skip-link";
 import { siteConfig } from "@/lib/site-config";
-import { THEME_INIT_SCRIPT } from "@/lib/theme";
+import { PREFERENCES_INIT_SCRIPT } from "@/lib/preferences";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -32,10 +32,10 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    // The pre-paint script may add the `dark` class, so the attribute can differ from SSR.
+    // The pre-paint script may set `dark` / data-* attributes, so the attribute can differ from SSR.
     <html lang="uz" className={inter.variable} suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: PREFERENCES_INIT_SCRIPT }} />
       </head>
       <body className="flex min-h-dvh flex-col">
         <SkipLink />

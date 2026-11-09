@@ -31,6 +31,28 @@ type RequestOptions = {
 
 const DEFAULT_TIMEOUT_MS = 10_000;
 
+/**
+ * User-facing Uzbek messages for backend error codes. Backend messages are
+ * English and meant for operators, so they are never shown to users directly.
+ */
+const ERROR_MESSAGES: Record<string, string> = {
+  database_unavailable:
+    "Ma’lumotlar bazasi vaqtincha ishlamayapti. Birozdan so‘ng urinib ko‘ring.",
+  service_unavailable:
+    "Xizmat vaqtincha ishlamayapti. Birozdan so‘ng urinib ko‘ring.",
+  internal_error: "Serverda kutilmagan xatolik yuz berdi.",
+  rate_limited: "So‘rovlar juda ko‘p. Birozdan so‘ng urinib ko‘ring.",
+  payload_too_large: "Yuborilgan ma’lumot hajmi juda katta.",
+  validation_error: "Kiritilgan ma’lumotlar noto‘g‘ri.",
+  not_found: "So‘ralgan ma’lumot topilmadi.",
+  unauthorized: "Tizimga kirishingiz kerak.",
+  forbidden: "Bu amal uchun ruxsatingiz yo‘q.",
+};
+
+export function userMessageForStatus(code: string, status: number): string {
+  return ERROR_MESSAGES[code] ?? `So‘rov bajarilmadi (${status}).`;
+}
+
 export async function apiRequest<S extends z.ZodType>(
   path: string,
   schema: S,
@@ -72,8 +94,13 @@ export async function apiRequest<S extends z.ZodType>(
   if (!response.ok && !acceptStatuses.includes(response.status)) {
     const parsedError = errorResponseSchema.safeParse(payload);
     if (parsedError.success) {
-      const { code, message, details } = parsedError.data.error;
-      throw new ApiError(response.status, code, message, details);
+      const { code, details } = parsedError.data.error;
+      throw new ApiError(
+        response.status,
+        code,
+        userMessageForStatus(code, response.status),
+        details,
+      );
     }
     throw new ApiError(
       response.status,

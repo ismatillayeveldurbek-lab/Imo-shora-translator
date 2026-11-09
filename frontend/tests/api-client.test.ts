@@ -21,22 +21,31 @@ describe("apiRequest", () => {
     );
   });
 
-  it("maps structured backend errors to ApiError", async () => {
+  it("maps structured backend errors to ApiError with an Uzbek user message", async () => {
     stubFetch({
       "/api/thing": () =>
         jsonResponse(
-          { error: { code: "not_found", message: "Topilmadi", details: null } },
-          404,
+          { error: { code: "database_unavailable", message: "DB down" } },
+          503,
         ),
     });
     const error = await apiRequest("/api/thing", schema).catch(
       (e: unknown) => e,
     );
     expect(error).toBeInstanceOf(ApiError);
-    expect(error).toMatchObject({
-      status: 404,
-      code: "not_found",
-      message: "Topilmadi",
+    expect(error).toMatchObject({ status: 503, code: "database_unavailable" });
+    expect((error as ApiError).message).toMatch(
+      /Ma’lumotlar bazasi vaqtincha ishlamayapti/,
+    );
+  });
+
+  it("falls back to a generic Uzbek message for unknown error codes", async () => {
+    stubFetch({
+      "/api/thing": () =>
+        jsonResponse({ error: { code: "weird", message: "English" } }, 418),
+    });
+    await expect(apiRequest("/api/thing", schema)).rejects.toMatchObject({
+      message: "So‘rov bajarilmadi (418).",
     });
   });
 

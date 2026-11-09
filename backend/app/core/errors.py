@@ -16,6 +16,7 @@ from fastapi import FastAPI, Request, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from sqlalchemy.exc import InterfaceError, OperationalError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 logger = logging.getLogger("uzsign.errors")
@@ -86,6 +87,25 @@ async def _validation_error_handler(_: Request, exc: Exception) -> JSONResponse:
     )
 
 
+# Errors that mean "the database cannot be reached right now" (not a bug in our code).
+DATABASE_UNAVAILABLE_ERRORS: tuple[type[Exception], ...] = (
+    OperationalError,
+    InterfaceError,
+    ConnectionError,
+)
+
+
+async def _database_unavailable_handler(request: Request, exc: Exception) -> JSONResponse:
+    logger.error(
+        "Database unavailable on %s %s: %s", request.method, request.url.path, type(exc).__name__
+    )
+    return JSONResponse(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        content=error_body("database_unavailable", "The database is temporarily unavailable"),
+        headers={"Retry-After": "5"},
+    )
+
+
 async def _unhandled_error_handler(request: Request, exc: Exception) -> JSONResponse:
     logger.exception("Unhandled error on %s %s", request.method, request.url.path, exc_info=exc)
     return JSONResponse(
@@ -98,4 +118,8 @@ def register_exception_handlers(app: FastAPI) -> None:
     app.add_exception_handler(AppError, _app_error_handler)
     app.add_exception_handler(StarletteHTTPException, _http_error_handler)
     app.add_exception_handler(RequestValidationError, _validation_error_handler)
+    for exc_class in DATABASE_UNAVAILABLE_ERRORS:
+        app.add_exception_handler(exc_class, _database_unavailable_handler)
+    # Last-resort fallback; UnhandledErrorMiddleware normally catches these first
+    # so the response still passes through CORS.
     app.add_exception_handler(Exception, _unhandled_error_handler)

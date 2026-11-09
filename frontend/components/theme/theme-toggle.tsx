@@ -1,18 +1,16 @@
 "use client";
 
 import { Monitor, Moon, Sun } from "lucide-react";
-import { useSyncExternalStore } from "react";
 
 import { Button } from "@/components/ui/button";
+import { usePreferences } from "@/hooks/use-preferences";
 import {
   NEXT_THEME,
-  readThemePreference,
-  setThemePreference,
-  subscribeToTheme,
+  updatePreferences,
   type ThemePreference,
-} from "@/lib/theme";
+} from "@/lib/preferences";
 
-const LABELS: Record<ThemePreference, string> = {
+export const THEME_LABELS: Record<ThemePreference, string> = {
   system: "Tizim mavzusi",
   light: "Yorug‘ mavzu",
   dark: "Qorong‘i mavzu",
@@ -21,21 +19,17 @@ const LABELS: Record<ThemePreference, string> = {
 const ICONS = { system: Monitor, light: Sun, dark: Moon } as const;
 
 export function ThemeToggle() {
-  const preference = useSyncExternalStore(
-    subscribeToTheme,
-    readThemePreference,
-    () => "system" as const,
-  );
-  const next = NEXT_THEME[preference];
-  const Icon = ICONS[preference];
+  const { theme } = usePreferences();
+  const next = NEXT_THEME[theme];
+  const Icon = ICONS[theme];
 
   return (
     <Button
       variant="ghost"
       size="icon"
-      onClick={() => setThemePreference(next)}
-      aria-label={`Joriy: ${LABELS[preference]}. ${LABELS[next]}ga o‘tish`}
-      title={LABELS[preference]}
+      onClick={() => updatePreferences({ theme: next })}
+      aria-label={`Joriy: ${THEME_LABELS[theme]}. ${THEME_LABELS[next]}ga o‘tish`}
+      title={THEME_LABELS[theme]}
     >
       <Icon aria-hidden="true" />
     </Button>

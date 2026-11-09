@@ -13,7 +13,7 @@ from app.api.router import api_router
 from app.core.config import Settings, get_settings
 from app.core.errors import register_exception_handlers
 from app.core.logging import configure_logging
-from app.core.middleware import RequestSizeLimitMiddleware
+from app.core.middleware import RequestSizeLimitMiddleware, UnhandledErrorMiddleware
 from app.db.session import build_engine, build_session_factory
 
 logger = logging.getLogger("uzsign")
@@ -54,6 +54,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         openapi_url=None if settings.is_production else "/openapi.json",
     )
 
+    # Middleware added first runs innermost. Order (outer → inner):
+    # CORS → request size limit → unhandled error → routes.
+    app.add_middleware(UnhandledErrorMiddleware)
     app.add_middleware(RequestSizeLimitMiddleware, max_bytes=settings.max_request_body_bytes)
     app.add_middleware(
         CORSMiddleware,

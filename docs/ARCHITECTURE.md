@@ -164,9 +164,9 @@ uzsign-ai/
 | Bosqich | Mazmun | Holat |
 |---|---|---|
 | 1 | Arxitektura, sozlash, DB sxemasi, Docker, CI | ✅ Bajarildi |
-| 2 | Dizayn tizimi, barcha sahifalar, navigatsiya, accessibility | Keyingi |
-| 3 | Lug'at API (`/api/signs`), filtrlash, pagination | |
-| 4 | Matn → imo-ishora dvigateli, video pleyer, S3 storage | |
+| 2 | Dizayn tizimi, kontent sahifalari, Sozlamalar, mobil navigatsiya, accessibility | ✅ Bajarildi |
+| 3 | Lug‘at API (`/api/signs`) + lug‘at va batafsil sahifalari | Keyingi |
+| 4 | Matn → imo-ishora dvigateli, tarjima sahifasi, video pleyer, S3 storage | |
 | 5 | Kamera, MediaPipe, overlay, buferlash, WebSocket | |
 | 6 | Dataset vositalari, baseline + GRU, baholash, inference | Ma'lumot talab qiladi |
 | 7 | Mikrofon, ASR adapteri | ASR provayderi talab qiladi |

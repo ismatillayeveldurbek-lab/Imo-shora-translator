@@ -1,4 +1,4 @@
-import { ArrowRight, Camera, Activity } from "lucide-react";
+import { Activity, ArrowRight, BookOpenText, Camera } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -50,11 +50,18 @@ export function Hero() {
             </Button>
           )}
           {!anyActionAvailable && (
-            <Button asChild size="lg" variant="outline">
-              <a href="#tizim-holati">
-                <Activity aria-hidden="true" /> Tizim holatini ko‘rish
-              </a>
-            </Button>
+            <>
+              <Button asChild size="lg">
+                <Link href={routes.howItWorks.href}>
+                  <BookOpenText aria-hidden="true" /> Qanday ishlaydi
+                </Link>
+              </Button>
+              <Button asChild size="lg" variant="outline">
+                <a href="#tizim-holati">
+                  <Activity aria-hidden="true" /> Tizim holatini ko‘rish
+                </a>
+              </Button>
+            </>
           )}
         </div>
       </div>
