@@ -53,3 +53,55 @@ export const modelsStatusResponseSchema = z.object({
   capabilities: z.array(capabilityStatusSchema),
 });
 export type ModelsStatusResponse = z.infer<typeof modelsStatusResponseSchema>;
+
+// ---- Dictionary ----
+
+export const categoryRefSchema = z.object({
+  name: z.string(),
+  slug: z.string(),
+});
+
+export const signSummarySchema = z.object({
+  id: z.uuid(),
+  gloss: z.string(),
+  uzbek_label: z.string(),
+  category: categoryRefSchema.nullable(),
+  language_variant: z.object({ code: z.string(), name: z.string() }),
+  is_dynamic: z.boolean(),
+  has_video: z.boolean(),
+  is_test_data: z.boolean(),
+});
+export type SignSummary = z.infer<typeof signSummarySchema>;
+
+export const signVideoSchema = z.object({
+  id: z.uuid(),
+  url: z.string().nullable(),
+  duration_ms: z.number().int().positive(),
+  video_format: z.string(),
+  width: z.number().int().nullable(),
+  height: z.number().int().nullable(),
+  is_primary: z.boolean(),
+});
+export type SignVideo = z.infer<typeof signVideoSchema>;
+
+export const signDetailSchema = signSummarySchema.extend({
+  description: z.string().nullable(),
+  verification_status: z.string(),
+  videos: z.array(signVideoSchema),
+  updated_at: z.string(),
+});
+export type SignDetail = z.infer<typeof signDetailSchema>;
+
+export const signPageSchema = z.object({
+  items: z.array(signSummarySchema),
+  total: z.number().int().nonnegative(),
+  page: z.number().int().positive(),
+  page_size: z.number().int().positive(),
+  total_pages: z.number().int().nonnegative(),
+});
+export type SignPage = z.infer<typeof signPageSchema>;
+
+export const categoryWithCountSchema = categoryRefSchema.extend({
+  sign_count: z.number().int().nonnegative(),
+});
+export type CategoryWithCount = z.infer<typeof categoryWithCountSchema>;

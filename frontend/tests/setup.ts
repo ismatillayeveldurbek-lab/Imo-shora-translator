@@ -2,7 +2,9 @@ import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
 import { afterEach, beforeEach, vi } from "vitest";
 
-beforeEach(() => {
+beforeEach(async () => {
+  const { navigation } = await import("./navigation-mock");
+  navigation.reset();
   localStorage.clear();
   const root = document.documentElement;
   root.className = "";
@@ -28,4 +30,11 @@ Object.defineProperty(window, "matchMedia", {
 });
 
 // next/navigation is only available inside the Next runtime.
-vi.mock("next/navigation", () => ({ usePathname: () => "/" }));
+vi.mock("next/navigation", async () => {
+  const { navigation } = await import("./navigation-mock");
+  return {
+    usePathname: () => navigation.pathname,
+    useSearchParams: () => new URLSearchParams(navigation.search),
+    useRouter: () => ({ replace: navigation.replace, push: navigation.push }),
+  };
+});

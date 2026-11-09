@@ -4,6 +4,10 @@ const isDev = process.env.NODE_ENV !== "production";
 const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 const apiOrigin = new URL(apiUrl).origin;
 const wsOrigin = apiOrigin.replace(/^http/, "ws");
+// Origin that serves sign videos (CDN / S3), if different from the API.
+const mediaOrigin = process.env.NEXT_PUBLIC_MEDIA_ORIGIN
+  ? new URL(process.env.NEXT_PUBLIC_MEDIA_ORIGIN).origin
+  : "";
 
 // Content-Security-Policy: only our own origin plus the API. 'unsafe-inline'
 // for scripts is required by the pre-paint theme script and Next's inline
@@ -15,7 +19,7 @@ const csp = [
   "img-src 'self' data: blob:",
   "font-src 'self'",
   `connect-src 'self' ${apiOrigin} ${wsOrigin}`,
-  `media-src 'self' blob: ${apiOrigin}`,
+  `media-src 'self' blob: ${apiOrigin} ${mediaOrigin}`.trim(),
   "worker-src 'self' blob:",
   "frame-ancestors 'none'",
   "base-uri 'self'",
