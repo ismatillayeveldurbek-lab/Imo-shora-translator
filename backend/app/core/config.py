@@ -73,6 +73,10 @@ class Settings(BaseSettings):
     # S3 bucket website endpoint). Unset = videos are not playable yet.
     media_public_base_url: AnyHttpUrl | None = None
 
+    # Language variant code used for translation when the request names none.
+    # Optional while the database holds a single public variant.
+    default_language_variant: str | None = None
+
     # DEVELOPMENT ONLY: also list rows flagged is_test_data in the public
     # dictionary (marked as test data in responses). Forbidden in production.
     dictionary_include_test_data: bool = False
@@ -94,7 +98,9 @@ class Settings(BaseSettings):
             raise ValueError("DATABASE_URL must use the 'postgresql+asyncpg' scheme")
         return value
 
-    @field_validator("asr_provider", "media_public_base_url", mode="before")
+    @field_validator(
+        "asr_provider", "media_public_base_url", "default_language_variant", mode="before"
+    )
     @classmethod
     def _empty_to_none(cls, value: object) -> object:
         if isinstance(value, str) and not value.strip():

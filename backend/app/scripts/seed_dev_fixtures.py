@@ -3,7 +3,9 @@
 Everything created here:
   * belongs to the language variant ``dev-fixture`` (is_test_data = true),
   * has ``is_test_data = true`` and status ``draft`` (never ``verified``),
-  * has a gloss starting with ``TEST_`` and no videos.
+  * has a gloss starting with ``TEST_`` and no videos,
+  * has lookup aliases (e.g. "salom") so text→sign can be exercised; they
+    only resolve within the test variant, i.e. in development test-data mode.
 
 Public endpoints exclude test data, so these rows exist only to exercise the
 UI and API during development. The script refuses to run in production.
@@ -21,7 +23,8 @@ from sqlalchemy.dialects.postgresql import insert
 
 from app.core.config import get_settings
 from app.db.session import build_engine, build_session_factory
-from app.models import Category, LanguageVariant, Sign, VerificationStatus
+from app.models import Category, LanguageVariant, Sign, SignAlias, VerificationStatus
+from app.services.text_normalization import normalize_search_key
 
 FIXTURE_VARIANT_CODE = "dev-fixture"
 
@@ -30,11 +33,11 @@ _CATEGORIES = [
     ("TEST — Raqamlar", "test-raqamlar"),
 ]
 
-# (gloss, uzbek_label, category_slug, is_dynamic)
+# (gloss, uzbek_label, category_slug, is_dynamic, aliases)
 _SIGNS = [
-    ("TEST_SALOM", "salom (test)", "test-salomlashish", True),
-    ("TEST_RAHMAT", "rahmat (test)", "test-salomlashish", True),
-    ("TEST_BIR", "bir (test)", "test-raqamlar", False),
+    ("TEST_SALOM", "salom (test)", "test-salomlashish", True, ("salom",)),
+    ("TEST_RAHMAT", "rahmat (test)", "test-salomlashish", True, ("rahmat", "katta rahmat")),
+    ("TEST_BIR", "bir (test)", "test-raqamlar", False, ("bir", "1")),
 ]
 
 
@@ -90,10 +93,32 @@ async def seed() -> None:
                             "verification_status": VerificationStatus.DRAFT,
                             "is_test_data": True,
                         }
-                        for gloss, label, slug, dynamic in _SIGNS
+                        for gloss, label, slug, dynamic, _ in _SIGNS
                     ]
                 )
                 .on_conflict_do_nothing(index_elements=["language_variant_id", "gloss"])
+            )
+            sign_ids = {
+                gloss: sid
+                for gloss, sid in (
+                    await session.execute(
+                        select(Sign.gloss, Sign.id).where(Sign.language_variant_id == variant_id)
+                    )
+                ).all()
+            }
+            alias_rows = [
+                {
+                    "sign_id": sign_ids[gloss],
+                    "language_variant_id": variant_id,
+                    "normalized_text": normalize_search_key(alias),
+                }
+                for gloss, *_, aliases in _SIGNS
+                for alias in aliases
+            ]
+            await session.execute(
+                insert(SignAlias)
+                .values(alias_rows)
+                .on_conflict_do_nothing(index_elements=["language_variant_id", "normalized_text"])
             )
         print(f"Seeded development fixtures into variant '{FIXTURE_VARIANT_CODE}'.")
     finally:

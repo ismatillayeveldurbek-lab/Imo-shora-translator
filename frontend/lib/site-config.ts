@@ -21,7 +21,7 @@ export const routes = {
   textToSign: {
     href: "/translate/text",
     label: "Matndan imo-ishoraga",
-    available: false,
+    available: true,
   },
   signToText: {
     href: "/recognize",

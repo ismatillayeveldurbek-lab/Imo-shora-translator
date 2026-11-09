@@ -47,6 +47,11 @@ const ERROR_MESSAGES: Record<string, string> = {
   not_found: "So‘ralgan ma’lumot topilmadi.",
   unauthorized: "Tizimga kirishingiz kerak.",
   forbidden: "Bu amal uchun ruxsatingiz yo‘q.",
+  variant_required:
+    "Bir nechta imo-ishora tili varianti mavjud. Iltimos, birini tanlang.",
+  unknown_variant: "Tanlangan imo-ishora tili varianti topilmadi.",
+  variant_misconfigured:
+    "Server sozlamalarida til varianti noto‘g‘ri ko‘rsatilgan.",
 };
 
 export function userMessageForStatus(code: string, status: number): string {

@@ -23,14 +23,18 @@ export function jsonResponse(body: unknown, status = 200): Response {
 export function stubFetch(
   routes: Record<string, () => Response | Promise<Response>>,
 ) {
-  const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
-    const url = new URL(
-      input instanceof Request ? input.url : input.toString(),
-    );
-    const handler = routes[url.pathname];
-    if (!handler) throw new TypeError(`Unexpected request: ${url.pathname}`);
-    return handler();
-  });
+  // `init` is declared so tests can inspect request bodies via mock.calls.
+  const fetchMock = vi.fn(
+    async (input: RequestInfo | URL, init?: RequestInit) => {
+      void init;
+      const url = new URL(
+        input instanceof Request ? input.url : input.toString(),
+      );
+      const handler = routes[url.pathname];
+      if (!handler) throw new TypeError(`Unexpected request: ${url.pathname}`);
+      return handler();
+    },
+  );
   vi.stubGlobal("fetch", fetchMock);
   return fetchMock;
 }

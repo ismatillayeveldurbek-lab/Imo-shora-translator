@@ -79,6 +79,7 @@ cd frontend && npm run lint && npm run typecheck && npm test && npm run build
 | GET | `/api/signs` | Lug'at: `q`, `category`, `letter` (o'zbek alifbosi, `o'`, `g'`, `sh`, `ch`, `ng` bilan), `variant`, `page`, `page_size` (≤100) |
 | GET | `/api/signs/{id}` | Imo-ishora tafsilotlari va tasdiqlangan videolar. Ommaviy bo'lmasa — `404` |
 | GET | `/api/categories` | Ommaviy imo-ishoralari bor toifalar va ularning soni |
+| POST | `/api/translate/text-to-sign` | O'zbekcha matn (≤500 belgi) → tasdiqlangan imo-ishoralar ketma-ketligi. Lug'atga asoslangan, grammatika qo'llanmaydi |
 
 **Lug'atda ko'rinish qoidasi:** yozuv `verified` holatida bo'lishi, test ma'lumoti bo'lmasligi va
 kamida bitta tasdiqlangan (`validated`) videoga ega bo'lishi shart. Qidiruvda apostrof variantlari
@@ -91,6 +92,31 @@ curl -s "http://localhost:8000/api/signs?q=o%E2%80%98zbek&page_size=10"
 ```json
 {"items": [], "total": 0, "page": 1, "page_size": 10, "total_pages": 0}
 ```
+
+Matndan imo-ishoraga tarjima (eng uzun ibora birinchi, topilmagan so'zlar `unmatched`):
+
+```bash
+curl -s -X POST http://localhost:8000/api/translate/text-to-sign \
+  -H 'Content-Type: application/json' -d '{"text": "Salom, katta rahmat!"}'
+```
+
+```json
+{
+  "method": "dictionary_lookup",
+  "input_text": "Salom, katta rahmat!",
+  "language_variant": {"code": "...", "name": "..."},
+  "segments": [
+    {"type": "sign", "text": "Salom", "normalized": "salom", "start": 0, "end": 5,
+     "sign": {"id": "...", "gloss": "...", "uzbek_label": "salom", "is_test_data": false,
+              "video": {"url": "https://media.example/...mp4", "duration_ms": 1500, "video_format": "mp4"}}},
+    {"type": "unmatched", "text": "katta", "normalized": "katta", "start": 7, "end": 12, "sign": null}
+  ],
+  "matched_count": 1, "unmatched_count": 1, "unmatched_words": ["katta"]
+}
+```
+
+Bir nechta til varianti bo'lsa va `variant` ko'rsatilmasa, `422 variant_required` (mavjud kodlar `details.available` da) qaytadi.
+Kiritilgan matn saqlanmaydi.
 
 Dasturlashda test yozuvlarini ko'rish uchun (productionda taqiqlangan):
 

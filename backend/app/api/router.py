@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
-from app.api.routes import health, models_status, signs
+from app.api.routes import health, models_status, signs, translate
 from app.schemas.common import ErrorResponse
 
 api_router = APIRouter(
@@ -15,3 +15,4 @@ api_router = APIRouter(
 api_router.include_router(health.router)
 api_router.include_router(models_status.router)
 api_router.include_router(signs.router)
+api_router.include_router(translate.router)
