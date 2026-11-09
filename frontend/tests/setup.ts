@@ -1,6 +1,14 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
-import { afterEach, vi } from "vitest";
+import { afterEach, beforeEach, vi } from "vitest";
+
+beforeEach(() => {
+  localStorage.clear();
+  const root = document.documentElement;
+  root.className = "";
+  delete root.dataset.textScale;
+  delete root.dataset.motion;
+});
 
 afterEach(() => {
   cleanup();
@@ -18,3 +26,6 @@ Object.defineProperty(window, "matchMedia", {
     removeEventListener: () => {},
   }),
 });
+
+// next/navigation is only available inside the Next runtime.
+vi.mock("next/navigation", () => ({ usePathname: () => "/" }));

@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import json
+import logging
 
 from starlette.exceptions import HTTPException
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from app.core.errors import error_body
+
+logger = logging.getLogger("uzsign.errors")
 
 
 class _BodyTooLarge(HTTPException):
@@ -86,3 +89,47 @@ class RequestSizeLimitMiddleware:
             }
         )
         await send({"type": "http.response.body", "body": body})
+
+
+class UnhandledErrorMiddleware:
+    """Turns unexpected exceptions into a structured 500 *inside* the CORS layer.
+
+    Starlette handles ``Exception`` handlers in its outermost middleware, i.e.
+    outside CORSMiddleware, so those 500s lack CORS headers and browsers report
+    a misleading CORS error. This middleware must be added before (inside) CORS.
+    """
+
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        response_started = False
+
+        async def tracking_send(message: Message) -> None:
+            nonlocal response_started
+            if message["type"] == "http.response.start":
+                response_started = True
+            await send(message)
+
+        try:
+            await self.app(scope, receive, tracking_send)
+        except Exception:
+            if response_started:
+                raise
+            logger.exception("Unhandled error on %s %s", scope.get("method"), scope.get("path"))
+            body = json.dumps(error_body("internal_error", "An unexpected error occurred")).encode()
+            await send(
+                {
+                    "type": "http.response.start",
+                    "status": 500,
+                    "headers": [
+                        (b"content-type", b"application/json"),
+                        (b"content-length", str(len(body)).encode()),
+                    ],
+                }
+            )
+            await send({"type": "http.response.body", "body": body})

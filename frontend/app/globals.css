@@ -106,6 +106,7 @@
   }
   html {
     color-scheme: light;
+    scroll-behavior: smooth;
   }
   html.dark {
     color-scheme: dark;
@@ -119,6 +120,15 @@
   }
 }
 
+/* Text size preference: everything is rem-based, so scaling the root scales the UI. */
+html[data-text-scale="large"] {
+  font-size: 112.5%;
+}
+html[data-text-scale="xlarge"] {
+  font-size: 125%;
+}
+
+/* Reduced motion: honour the OS setting and the explicit in-app preference. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -128,4 +138,12 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+html[data-motion="reduce"] *,
+html[data-motion="reduce"] *::before,
+html[data-motion="reduce"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
 }
